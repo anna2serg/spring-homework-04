@@ -8,5 +8,6 @@ public interface TestBoxDao {
 	int count();  
 	TestUnit nextTest();
 	TestUnit getTest();
+	void reset();
 	
 }

@@ -73,7 +73,7 @@ public class TestBoxDaoImpl implements TestBoxDao {
 
 	@Override
 	public boolean isEOF() {
-		return ((testList.size() <= 0)||(index == testList.size()));
+		return ((testList.size() <= 0)||(index == testList.size() - 1));
 	}
 
 	@Override
@@ -93,4 +93,9 @@ public class TestBoxDaoImpl implements TestBoxDao {
 		return testList.get(index);
 	}	
 
+	@Override
+	public void reset() {
+		index = 0;
+	}		
+	
 }

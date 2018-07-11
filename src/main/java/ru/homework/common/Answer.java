@@ -20,5 +20,4 @@ public final class Answer {
     public String toString() { 
     	return variant;  
     }     
-    
 }
