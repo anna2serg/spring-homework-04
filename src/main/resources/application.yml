@@ -1,0 +1,6 @@
+application:   
+ locale: ru
+
+test:
+ file: q.csv
+  
