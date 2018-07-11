@@ -1,8 +1,10 @@
 package ru.homework.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import ru.homework.common.Answer;
+import ru.homework.common.TestStatUnit;
 import ru.homework.common.TestUnit;
 import ru.homework.configuration.AppSettings;
 import ru.homework.dao.TestBoxDao;
@@ -30,6 +33,10 @@ public class TestService {
 	private int maxScore = 0;
 	private int userScore = 0;
 	private TestUnit testUnit;
+	private int counter = 0;
+	private boolean isAnswered = false;
+	
+	private List<Map<String,TestStatUnit>> statTable;
 	
 	@Autowired
     public TestService(AppSettings settings, TestBoxDao dao, MessageSource messageSource) {
@@ -38,6 +45,7 @@ public class TestService {
     	this.dao = dao;	
     	this.messageSource = messageSource;
     	userAnswers = new ArrayList<Integer>();
+    	statTable = new ArrayList<Map<String,TestStatUnit>>();
     }	
      
 	private boolean tryParseInt(String value) {  
@@ -57,18 +65,20 @@ public class TestService {
 		return messageSource.getMessage(value, args, locale);
 	}	
 	
+	private String getAnonymous() {
+		return getLocalizedValue("test.anonymous");
+	}
+	
 	private void reset() {
+		counter = 0;
 		dao.reset();
 		user = "";
 		maxScore = 0;
 		userScore = 0;		
 		userAnswers.clear();
+		isAnswered = false;
 	}
 
-	public void start() {
-		start("");	
-    }    
-	
 	@SuppressWarnings("resource")
 	public void start(String name) {
 		reset();
@@ -80,23 +90,21 @@ public class TestService {
 	    System.out.println(getLocalizedValue("test.description"));
 	    System.out.println();
 	    
-	    this.user = name;
-	    if (this.user.equals("")) {
+	    if (name.equals("")) {
 	    	System.out.println(getLocalizedValue("input.name"));
-	    	this.user = in.nextLine();    
+	    	String inputName = in.nextLine(); 
+	    	this.user = inputName.equals("") ? getAnonymous()+"_"+java.util.UUID.randomUUID().toString() : inputName;
+	    } else {
+	    	this.user = name;
 	    }
 
 		System.out.println(getLocalizedValue("hello.user", new String[] {this.user}));
 		System.out.println();
-	   	System.out.println("");
-	   	 
-	   	
-	   	 
+
 	   	if (!dao.isEOF()) {
 	   		getTest();
 	   		state = TestState.isRunning;
 	   	} 
-	
 	}
 	
 	public void getTest() {
@@ -120,16 +128,56 @@ public class TestService {
 		if (multi) System.out.println(multiHint);
 		else System.out.println(singleHint);
 		System.out.println(answers);
-		System.out.print(getLocalizedValue("user.answer"));
+		System.out.println(getLocalizedValue("user.answer"));
 		maxScore += 10;
 		testUnit = tu;
+		counter += 1;
 	}
-    
+	
+	private void scoring() {
+	    if (maxScore > 0) {
+	    	System.out.println();
+	    	String scoreResult = getLocalizedValue("score.result",  new Object[]{user, userScore, maxScore});
+	    	System.out.println(scoreResult);
+		 
+	    	
+	    	int userScorePercent = 100 * userScore / maxScore;
+	    	String rankResult = userScorePercent>80 ? getLocalizedValue("score.result.excellent") :
+	    						userScorePercent>55 ? getLocalizedValue("score.result.good") :
+	    						userScorePercent>20 ? getLocalizedValue("score.result.notbad") :	 
+	    											  getLocalizedValue("score.result.soso"); 	 	
+	    	System.out.println(rankResult);
+	    	
+	    	TestStatUnit statUnit = new TestStatUnit(counter==dao.count(), userScorePercent);
+	    	Map<String,TestStatUnit> userStat = new HashMap<String,TestStatUnit>();
+			userStat.put(user, statUnit);
+			statTable.add(userStat);	    	
+	    	
+	    }	
+	    state = TestState.isCompleted;		
+	}
+	
+	public void nextTest() {
+		if (state!=TestState.isRunning) {
+			System.out.println(getLocalizedValue("test.state.isNotRunning"));
+			return;
+		}		
+		if (!dao.isEOF()) {
+			dao.nextTest();
+			getTest();
+			isAnswered = false;
+		} else scoring();
+	}
+	
 	public void select(String option) {
 		if (state!=TestState.isRunning) {
 			System.out.println(getLocalizedValue("test.state.isNotRunning"));
 			return;
 		}
+		if (isAnswered) {
+			System.out.println(getLocalizedValue("hint.answered"));
+			return;			
+		} else isAnswered = true;
 		userAnswers.clear();
 		String[] userInput = option.split(","); 
 		for (String ui : userInput) {
@@ -147,25 +195,28 @@ public class TestService {
 		if (testUnit.isRightAnswers(userAnswers)) {
 			userScore += 10;
 		}		
-		
-		if (!dao.isEOF()) {
-			dao.nextTest();
-			getTest();
-		} else {
-		    if (maxScore > 0) {
-		    	System.out.println();
-		    	String scoreResult = getLocalizedValue("score.result",  new Object[]{user, userScore, maxScore});
-		    	System.out.println(scoreResult);
-	    	 
-		    	int userScorePercent = 100 * userScore / maxScore;
-		    	String rankResult = userScorePercent>80 ? getLocalizedValue("score.result.excellent") :
-		    						userScorePercent>55 ? getLocalizedValue("score.result.good") :
-		    						userScorePercent>20 ? getLocalizedValue("score.result.notbad") :	 
-		    											  getLocalizedValue("score.result.soso"); 	 	
-		    	System.out.println(rankResult);
-	        }	
-		    state = TestState.isCompleted;
+		if (dao.isEOF()) scoring();
+		else {
+			System.out.println(getLocalizedValue("hint.position", new Object[]{dao.count() - counter, dao.count()}));
 		}
 	}
+	
+	public void stop() {
+		if (state!=TestState.isRunning) {
+			System.out.println(getLocalizedValue("test.state.isNotRunning"));
+			return;
+		}	
+		scoring();	
+		reset();
+	}
     
+	public void statout(String name) {
+		//для всех
+		if (name.equals("")) {
+			
+		} else {
+			
+		}
+	}
+	
 }

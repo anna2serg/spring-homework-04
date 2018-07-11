@@ -17,12 +17,12 @@ public class SelectCommands {
     }
 	
     @ShellMethod("Set answer option. Params: option - test person option")
-    public void select(@ShellOption String option) {
+    public void maybe(@ShellOption String option) {
         service.select(option);
     }
     
     @ShellMethod("Задать вариант ответа. Параметры: вариант - выбранный вариант ответа")
-    public void выбор(@ShellOption String вариант) {
+    public void может(@ShellOption String вариант) {
         service.select(вариант);
     }
 }
