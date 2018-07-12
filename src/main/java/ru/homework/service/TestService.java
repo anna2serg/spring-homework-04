@@ -213,9 +213,24 @@ public class TestService {
 	public void statout(String name) {
 		//для всех
 		if (name.equals("")) {
-			
+			if (statTable.size()==0) {
+				System.out.println(getLocalizedValue("score.hint.empty"));
+			} else {
+				for (Map<String, TestStatUnit> userStat : statTable) {
+					String user = userStat.keySet().toString();
+					TestStatUnit stat = userStat.get(user);
+					System.out.print(user+": ");
+					System.out.print(stat.getIsPassed() ? getLocalizedValue("test.passed") : getLocalizedValue("test.failed"));
+					System.out.print(", ");
+					System.out.print(stat.getPercent()+"%");
+				}			
+			}
 		} else {
-			
+			for (Map<String, TestStatUnit> userStat : statTable) {
+				if (userStat.containsKey(name)) {
+					System.out.println(name+": "+userStat.get(name).getPercent()+"%");
+				}
+			}
 		}
 	}
 	
