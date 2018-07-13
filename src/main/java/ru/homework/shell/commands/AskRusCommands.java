@@ -4,25 +4,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
-import org.springframework.shell.standard.ShellOption;
 
 import ru.homework.service.TestService;
 
 @ConditionalOnProperty(
 		value = "application.locale" ,
-		havingValue = "en"
+		havingValue = "ru"
 	)
 @ShellComponent
-public class SelectCommands {
+public class AskRusCommands {
 	private final TestService service;
 	
     @Autowired
-    public SelectCommands(TestService service) {
+    public AskRusCommands(TestService service) {
         this.service = service;
     }
-	
-    @ShellMethod("Set answer option. Params: option - test person option")
-    public void maybe(@ShellOption String option) {
-        service.select(option);
+
+    @ShellMethod("Получить следующий вопрос")
+    public void спросиеще() {
+        service.nextTest();
     }
 }

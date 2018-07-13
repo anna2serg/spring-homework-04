@@ -1,12 +1,17 @@
 package ru.homework.shell.commands;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
 
 import ru.homework.service.TestService;
 
+@ConditionalOnProperty(
+		value = "application.locale" ,
+		havingValue = "en"
+	)
 @ShellComponent
 public class StatCommands {
 	private final TestService service;
@@ -20,9 +25,5 @@ public class StatCommands {
     public void stat(@ShellOption(defaultValue="") String name) {
         service.statout(name);
     }
-    
-    @ShellMethod("Вывод статистики. Параметры: имя - имя тестируемого")
-    public void статистика(@ShellOption(defaultValue="") String имя) {
-        service.statout(имя);
-    }
+
 }

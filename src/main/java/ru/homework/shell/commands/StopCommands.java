@@ -1,11 +1,16 @@
 package ru.homework.shell.commands;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 
 import ru.homework.service.TestService;
 
+@ConditionalOnProperty(
+		value = "application.locale" ,
+		havingValue = "en"
+	)
 @ShellComponent
 public class StopCommands {
 	private final TestService service;
@@ -19,9 +24,5 @@ public class StopCommands {
     public void leavemealone() {
         service.stop();
     }
-    
-    @ShellMethod("Прервать тестирование")
-    public void оставьменявпокое() {
-        service.stop();
-    }
+
 }
