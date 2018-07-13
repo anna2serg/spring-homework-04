@@ -30,7 +30,6 @@ public class TestService {
 	
 	private String user;
 	private List<Integer> userAnswers;
-	private int maxScore = 0;
 	private int userScore = 0;
 	private TestUnit testUnit;
 	private int counter = 0;
@@ -73,7 +72,6 @@ public class TestService {
 		counter = 0;
 		dao.reset();
 		user = "";
-		maxScore = 0;
 		userScore = 0;		
 		userAnswers.clear();
 		isAnswered = false;
@@ -129,19 +127,18 @@ public class TestService {
 		else System.out.println(singleHint);
 		System.out.println(answers);
 		System.out.println(getLocalizedValue("user.answer"));
-		maxScore += 10;
 		testUnit = tu;
 		counter += 1;
 	}
 	
 	private void scoring() {
-	    if (maxScore > 0) {
+	    if (dao.count() > 0) {
 	    	System.out.println();
-	    	String scoreResult = getLocalizedValue("score.result",  new Object[]{user, userScore, maxScore});
+	    	String scoreResult = getLocalizedValue("score.result",  new Object[]{user, userScore, 10*dao.count()});
 	    	System.out.println(scoreResult);
 		 
 	    	
-	    	int userScorePercent = 100 * userScore / maxScore;
+	    	int userScorePercent = 10 * userScore / dao.count();
 	    	String rankResult = userScorePercent>80 ? getLocalizedValue("score.result.excellent") :
 	    						userScorePercent>55 ? getLocalizedValue("score.result.good") :
 	    						userScorePercent>20 ? getLocalizedValue("score.result.notbad") :	 
@@ -209,6 +206,18 @@ public class TestService {
 		scoring();	
 		reset();
 	}
+	
+	private void statoutUser(Map<String, TestStatUnit> userStat) {
+		for (String user : userStat.keySet()) {
+			TestStatUnit stat = userStat.get(user);
+			System.out.print(user+": ");
+			System.out.print(stat.getIsPassed() ? getLocalizedValue("test.passed") : getLocalizedValue("test.failed"));
+			System.out.print(", ");
+			System.out.print(getLocalizedValue("test.rightanswers")+": ");
+			System.out.print(stat.getPercent()+"%");	
+			System.out.println();
+		}		
+	}
     
 	public void statout(String name) {
 		//для всех
@@ -217,18 +226,13 @@ public class TestService {
 				System.out.println(getLocalizedValue("score.hint.empty"));
 			} else {
 				for (Map<String, TestStatUnit> userStat : statTable) {
-					String user = userStat.keySet().toString();
-					TestStatUnit stat = userStat.get(user);
-					System.out.print(user+": ");
-					System.out.print(stat.getIsPassed() ? getLocalizedValue("test.passed") : getLocalizedValue("test.failed"));
-					System.out.print(", ");
-					System.out.print(stat.getPercent()+"%");
+					statoutUser(userStat);
 				}			
 			}
 		} else {
 			for (Map<String, TestStatUnit> userStat : statTable) {
 				if (userStat.containsKey(name)) {
-					System.out.println(name+": "+userStat.get(name).getPercent()+"%");
+					statoutUser(userStat);
 				}
 			}
 		}
