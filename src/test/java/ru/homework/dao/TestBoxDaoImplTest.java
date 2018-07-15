@@ -54,7 +54,7 @@ public class TestBoxDaoImplTest {
 	public void test() {
 		given(this.settings.getFile()).willReturn("mock");
 		given(this.csvReader.parse(any(File.class))).willReturn(testList);
-		testBoxDao.open();
+		testBoxDao.open();	
 		assertTrue(testBoxDao.count() == 2);
 		assertFalse(testBoxDao.isEOF());
 		TestUnit tu = testBoxDao.getTest();

@@ -20,7 +20,7 @@ import ru.homework.dao.TestBoxDao;
 @Service
 public class TestService {
 	
-	enum TestState {isUndefined, isRunning, isCompleted}
+	public enum TestState {isUndefined, isRunning, isCompleted}
 	
 	private TestState state = TestState.isUndefined;
 	private final AppSettings settings;
@@ -40,7 +40,8 @@ public class TestService {
 	@Autowired
     public TestService(AppSettings settings, TestBoxDao dao, MessageSource messageSource) {
 		this.settings = settings;
-		this.locale = new Locale(this.settings.getLocale());
+		if (this.settings.getLocale()!=null) 
+			this.locale = new Locale(this.settings.getLocale());
     	this.dao = dao;	
     	this.messageSource = messageSource;
     	userAnswers = new ArrayList<Integer>();
@@ -56,7 +57,7 @@ public class TestService {
 	      }  
 	}	
 	
-	private String getLocalizedValue(String value) {
+	protected String getLocalizedValue(String value) {
 		return messageSource.getMessage(value, null, locale);
 	}
 	
@@ -78,9 +79,9 @@ public class TestService {
 	}
 
 	@SuppressWarnings("resource")
-	public void start(String name) {
+	public TestState start(String name) {
 		reset();
-	    if (dao.count()==0) return;	
+	    if (dao.count()==0) return state;	
 
 	    Scanner in = new Scanner(System.in);
 	    System.out.println(getLocalizedValue("test.name"));
@@ -103,6 +104,8 @@ public class TestService {
 	   		getTest();
 	   		state = TestState.isRunning;
 	   	} 
+	   	
+	   	return state;
 	}
 	
 	public void getTest() {
@@ -198,44 +201,50 @@ public class TestService {
 		}
 	}
 	
-	public void stop() {
+	public TestState stop() {
 		if (state!=TestState.isRunning) {
 			System.out.println(getLocalizedValue("test.state.isNotRunning"));
-			return;
+			return state;
 		}	
 		scoring();	
 		reset();
+		return state;
 	}
 	
-	private void statoutUser(Map<String, TestStatUnit> userStat) {
+	private TestStatUnit statoutUser(Map<String, TestStatUnit> userStat) {
+		TestStatUnit stat = null;
 		for (String user : userStat.keySet()) {
-			TestStatUnit stat = userStat.get(user);
+			stat = userStat.get(user);
 			System.out.print(user+": ");
 			System.out.print(stat.getIsPassed() ? getLocalizedValue("test.passed") : getLocalizedValue("test.failed"));
 			System.out.print(", ");
 			System.out.print(getLocalizedValue("test.rightanswers")+": ");
 			System.out.print(stat.getPercent()+"%");	
 			System.out.println();
-		}		
+			break;
+		}	
+		return stat;
 	}
     
-	public void statout(String name) {
+	public List<TestStatUnit> statout(String name) {
+		List<TestStatUnit> result = new ArrayList<TestStatUnit>();
 		//для всех
 		if (name.equals("")) {
 			if (statTable.size()==0) {
 				System.out.println(getLocalizedValue("score.hint.empty"));
 			} else {
 				for (Map<String, TestStatUnit> userStat : statTable) {
-					statoutUser(userStat);
+					result.add(statoutUser(userStat));
 				}			
 			}
 		} else {
 			for (Map<String, TestStatUnit> userStat : statTable) {
 				if (userStat.containsKey(name)) {
-					statoutUser(userStat);
+					result.add(statoutUser(userStat));
 				}
 			}
 		}
+		return result;
 	}
 	
 }

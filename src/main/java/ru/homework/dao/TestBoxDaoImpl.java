@@ -21,7 +21,7 @@ public class TestBoxDaoImpl implements TestBoxDao {
 	private final TestSettings settings;
 	private final CSVReader csvReader;
 	
-	private void testListLoad(List<List<String>> testTable) {
+	protected void testListLoad(List<List<String>> testTable) {
 		reset();
 		testList = new ArrayList<TestUnit>();
 		for (List<String> rows : testTable) {
@@ -58,10 +58,16 @@ public class TestBoxDaoImpl implements TestBoxDao {
     	 this.settings = settings;
     }
 	
+	public void load(List<List<String>> sources) {
+		testListLoad(sources);
+	}
+	
 	@Override
 	public void open() {
-		List<List<String>> parsedStrings = csvReader.parse(new File(settings.getFile()));
-		if (testList == null) testListLoad(parsedStrings);
+		if (testList == null) {
+			List<List<String>> parsedStrings = csvReader.parse(new File(settings.getFile()));
+			testListLoad(parsedStrings);
+		}
 	}
 	
 	@Override
