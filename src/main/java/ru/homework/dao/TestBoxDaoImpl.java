@@ -1,9 +1,6 @@
 package ru.homework.dao;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,22 +15,15 @@ import ru.homework.reader.CSVReader;
 @Repository
 public class TestBoxDaoImpl implements TestBoxDao {
 	
-	private final CSVReader csvReader;
 	private List<TestUnit> testList;
 	private int index = 0; 
 	
-	private void testListLoad(String file) {
-		
-		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		InputStream inputStream  = classloader.getResourceAsStream(file);
-		if (inputStream==null) {
-			System.out.println("Упс! Файл с тестом не найден. Надо бы проверить имя и путь к файлу в настройках программы");
-			return;			
-		}	
-		InputStreamReader streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-		BufferedReader reader = new BufferedReader(streamReader);
-
-		List<List<String>> testTable = csvReader.parse(reader);
+	private final TestSettings settings;
+	private final CSVReader csvReader;
+	
+	private void testListLoad(List<List<String>> testTable) {
+		reset();
+		testList = new ArrayList<TestUnit>();
 		for (List<String> rows : testTable) {
 			TestUnit testUnit = new TestUnit();
 			String var = "";
@@ -64,13 +54,16 @@ public class TestBoxDaoImpl implements TestBoxDao {
 	
 	@Autowired
     public TestBoxDaoImpl(TestSettings settings, CSVReader csvReader) {
-        //парсим
-    	index = 0;
-    	testList = new ArrayList<TestUnit>();
-    	this.csvReader = csvReader;
-    	testListLoad(settings.getFile());
+    	 this.csvReader = csvReader;
+    	 this.settings = settings;
     }
-
+	
+	@Override
+	public void open() {
+		List<List<String>> parsedStrings = csvReader.parse(new File(settings.getFile()));
+		if (testList == null) testListLoad(parsedStrings);
+	}
+	
 	@Override
 	public boolean isEOF() {
 		return ((testList.size() <= 0)||(index == testList.size() - 1));
@@ -83,9 +76,8 @@ public class TestBoxDaoImpl implements TestBoxDao {
 
 	@Override
 	public TestUnit nextTest() {
-		TestUnit result = testList.get(index);
 		index += 1;
-		return result;
+		return testList.get(index);
 	}
 	
 	@Override

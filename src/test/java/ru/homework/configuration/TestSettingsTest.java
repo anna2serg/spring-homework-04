@@ -21,7 +21,8 @@ public class TestSettingsTest {
 	private TestSettings testSettings; 
 	
 	@Test
-	public void contextLoads() {
+	public void testFileIsSet() {
+		assertNotNull(testSettings.getFile());
 		assertTrue(!testSettings.getFile().equals(""));
 	}
 

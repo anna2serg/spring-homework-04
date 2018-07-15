@@ -21,7 +21,8 @@ public class AppSettingsTest {
 	private AppSettings appSettings; 
 	
 	@Test
-	public void contextLoads() {
+	public void localeIsSet() {
+		assertNotNull(appSettings.getLocale());
 		assertTrue(!appSettings.getLocale().equals(""));
 	}
 

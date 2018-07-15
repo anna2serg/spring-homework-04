@@ -9,5 +9,6 @@ public interface TestBoxDao {
 	TestUnit nextTest();
 	TestUnit getTest();
 	void reset();
+	void open();
 	
 }

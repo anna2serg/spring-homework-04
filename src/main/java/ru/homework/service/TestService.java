@@ -70,11 +70,11 @@ public class TestService {
 	
 	private void reset() {
 		counter = 0;
-		dao.reset();
 		user = "";
 		userScore = 0;		
 		userAnswers.clear();
 		isAnswered = false;
+		dao.open();
 	}
 
 	@SuppressWarnings("resource")
