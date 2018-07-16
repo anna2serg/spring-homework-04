@@ -68,6 +68,7 @@ public class TestBoxDaoImpl implements TestBoxDao {
 			List<List<String>> parsedStrings = csvReader.parse(new File(settings.getFile()));
 			testListLoad(parsedStrings);
 		}
+		reset();
 	}
 	
 	@Override
